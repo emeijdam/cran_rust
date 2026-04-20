@@ -4,14 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-arrow = "58.1.0"
-arrow-json = "58.1.0"
 chrono = "0.4.44"
 clap = { version = "4.6.0", features = ["derive"] }
 csv = "1.4.0"
-futures-util = "0.3.32"
 rds2rust = "0.1.41"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 
-
+[[bin]]
+name = "cran-osv-tool" # The actual command users will type
+path = "src/main.rs"

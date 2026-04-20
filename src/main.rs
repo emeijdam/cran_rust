@@ -9,7 +9,13 @@ mod rds;
 
 #[derive(Parser)]
 #[command(name = "rparse")]
-#[command(about = "A utility to parse R-related file formats", long_about = None)]
+#[command(about = "A utility to parse R-related file formats
+
+A DCF file in the context of CRAN stands for Debian Control File, 
+a plain-text format used to store metadata about R packages. 
+
+The most common example is the DESCRIPTION file within a package, 
+which holds crucial info like package name, version, dependencies, and author details.", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
