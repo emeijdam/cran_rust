@@ -74,3 +74,11 @@ cargo run -- rds ./data/packages.rds packages.csv
 cargo run -- rds ./data/archive.rds archive.csv
 
 cargo build --target x86_64-unknown-linux-gnu --release
+
+
+git checkout --orphan temp_branch
+git add -A 
+git commit -m "Initial commit" 
+git branch -D master 
+it branch --all   
+git branch -m master 

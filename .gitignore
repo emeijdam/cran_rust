@@ -1,6 +1,7 @@
 /target
-./data
-./cran_data
-./test
+/data
+/cran_data
+/test
 /out
 .DS_Store
+.env
