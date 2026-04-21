@@ -43,6 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     match &args.command {
+        
         Commands::Dcf { input, output } => {
             println!("Parsing DCF: {:?} -> {:?}", input, output);
             

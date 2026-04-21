@@ -131,7 +131,7 @@ impl<'a> RdsConverter<'a> {
             _ => {
                 return Err(RdsError::InvalidStructure(
                     "Expected 'dim' attribute with two integers".to_string(),
-                ))
+                ));
             }
         };
 
@@ -141,17 +141,21 @@ impl<'a> RdsConverter<'a> {
                 _ => {
                     return Err(RdsError::InvalidStructure(
                         "Second element of 'dimnames' must be a character vector".to_string(),
-                    ))
+                    ));
                 }
             },
             _ => {
                 return Err(RdsError::InvalidStructure(
                     "Expected 'dimnames' attribute as a list".to_string(),
-                ))
+                ));
             }
         };
 
-        let mut wtr = WriterBuilder::new().from_path(self.output_path)?;
+        let mut wtr = WriterBuilder::new()
+            .quote_style(QuoteStyle::NonNumeric)
+            .delimiter(b';')
+            .from_path(self.output_path)?;
+
         wtr.write_record(&columns)?;
 
         let data_vec = match object {
@@ -159,7 +163,7 @@ impl<'a> RdsConverter<'a> {
             _ => {
                 return Err(RdsError::UnsupportedType(
                     "Matrix data must be a character vector".to_string(),
-                ))
+                ));
             }
         };
 
@@ -168,7 +172,13 @@ impl<'a> RdsConverter<'a> {
             let mut row: Vec<String> = Vec::with_capacity(columns.len());
             for col_idx in 0..columns.len() {
                 let data_idx = (col_idx as i32 * num_rows) as usize + row_idx;
-                row.push(data_vec.get(data_idx).cloned().unwrap_or_default().to_string());
+                row.push(
+                    data_vec
+                        .get(data_idx)
+                        .cloned()
+                        .unwrap_or_default()
+                        .to_string(),
+                );
             }
             wtr.write_record(&row)?;
         }
@@ -189,7 +199,7 @@ impl<'a> RdsConverter<'a> {
             _ => {
                 return Err(RdsError::InvalidStructure(
                     "Expected 'names' attribute to be a character vector".to_string(),
-                ))
+                ));
             }
         };
 
@@ -199,13 +209,15 @@ impl<'a> RdsConverter<'a> {
 
         // Determine header from the first data frame
         let mut header: Vec<String> = match items.get(0) {
-            Some(RObject::DataFrame(df)) => {
-                df.columns.iter().map(|(name, _)| name.to_string()).collect()
-            }
+            Some(RObject::DataFrame(df)) => df
+                .columns
+                .iter()
+                .map(|(name, _)| name.to_string())
+                .collect(),
             _ => {
                 return Err(RdsError::InvalidStructure(
                     "Expected first item in list to be a DataFrame".to_string(),
-                ))
+                ));
             }
         };
 
@@ -222,7 +234,8 @@ impl<'a> RdsConverter<'a> {
         for (index, item) in items.iter().enumerate() {
             let package_name = package_names.get(index).map_or("", |s| s.as_str());
 
-            if let RObject::DataFrame(_df) = item { // _df to silence unused variable warning
+            if let RObject::DataFrame(_df) = item {
+                // _df to silence unused variable warning
                 self.write_dataframe_rows(&mut wtr, item, package_name)?;
             }
         }
@@ -261,7 +274,12 @@ impl<'a> RdsConverter<'a> {
         for row_idx in 0..num_rows {
             let mut record: Vec<&str> = Vec::with_capacity(df_struct.columns.len() + 2);
             record.push(package_name);
-            record.push(df_struct.row_names.get(row_idx).map_or("", |s: &Arc<str>| s.as_ref()));
+            record.push(
+                df_struct
+                    .row_names
+                    .get(row_idx)
+                    .map_or("", |s: &Arc<str>| s.as_ref()),
+            );
 
             for col in &string_cols {
                 record.push(col.get(row_idx).map_or("", |s| s.as_str()));
@@ -277,10 +295,7 @@ impl<'a> RdsConverter<'a> {
 // --- Helper Functions ---
 
 /// Converts a single RObject vector into a Vec of Strings.
-fn convert_robject_to_strings(
-    robject: &RObject,
-    num_rows: usize,
-) -> Result<Vec<String>, RdsError> {
+fn convert_robject_to_strings(robject: &RObject, num_rows: usize) -> Result<Vec<String>, RdsError> {
     match robject {
         RObject::Integer(v) => Ok(v.iter().map(|x| x.to_string()).collect()),
         RObject::Real(v) => Ok(v.iter().map(|x| x.to_string()).collect()),
@@ -316,12 +331,12 @@ fn convert_robject_to_strings(
                     return Ok(v
                         .iter()
                         .map(|&secs| {
-                            Utc.timestamp_opt(secs as i64, 0)
-                                .single()
-                                .map_or_else(
-                                    || "Invalid Time".to_string(),
-                                    |dt: chrono::DateTime<Utc>| dt.format("%Y-%m-%d %H:%M:%S").to_string(),
-                                )
+                            Utc.timestamp_opt(secs as i64, 0).single().map_or_else(
+                                || "Invalid Time".to_string(),
+                                |dt: chrono::DateTime<Utc>| {
+                                    dt.format("%Y-%m-%d %H:%M:%S").to_string()
+                                },
+                            )
                         })
                         .collect());
                 }
